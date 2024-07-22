@@ -4,12 +4,20 @@ Those include image segmentation,
 Every manipulation gets applied to car_edited.jpg and and saved under car_edited.jpg as well
 """
 from PIL import Image
+import tensorflow as tf
+import numpy as np
+import pickle
+from colormath.color_objects import sRGBColor, LabColor
+from colormath.color_conversions import convert_color
+from colormath.color_diff import delta_e_cie2000
 
+PATH_TO_SELECTION = "static/images/car_selection.png"
 PATH_TO_EDITED = "static/images/car_edited.png"
 PATH_TO_ORIGINAL = "static/images/car.png"
+PATH_TO_MASK = "static/mask/mask.pkl"
 
-def read_image():
-    return Image.open(PATH_TO_EDITED)
+def read_image(original=False):
+    return Image.open(PATH_TO_EDITED if not original else PATH_TO_ORIGINAL)
 
 def revert_edited_image():
     """
@@ -27,6 +35,9 @@ def bw_filter():
     return im
 
 def sepia_pixel(p):
+   """
+   note: The sepia_pixel method is copied directly from the lecture slides
+   """
    # tint shadows
    if p[0] < 63:
        r,g,b = int(p[0] * 1.1), p[1], int(p[2] * 0.9)
@@ -43,6 +54,9 @@ def sepia_pixel(p):
    return r, g, b
 
 def sepia_filter():
+    """
+    note: The sepia_filter method is copied directly from the lecture slides and modified only slightly
+    """
     im = read_image()
     pixels = im.getdata()
     pixels = [sepia_pixel(pixel) for pixel in pixels]
@@ -88,4 +102,100 @@ def apply_filter(filter, intensity):
     edited_im.putdata(combined_pixels)
     edited_im.save(PATH_TO_EDITED)
 
+def color_distance(color1, color2):
+    """
+    note: most of the code was copied from the lecture slides 'Digital Color Manipulation (Part 2)'
+    """
+    def patch_asscalar(a):
+        return a.item()
+    setattr(np, "asscalar", patch_asscalar)
 
+    color1_rgb = sRGBColor(color1[0], color1[1], color1[2], True)
+    color2_rgb = sRGBColor(color2[0], color2[1], color2[2], True)
+
+    color1_lab = convert_color(color1_rgb, LabColor)
+    color2_lab = convert_color(color2_rgb, LabColor)
+
+    return delta_e_cie2000(color1_lab, color2_lab)
+
+def image_segmentation(selection):
+    """
+    This method is used to find the car/paint in the image. 
+    Parameters:
+        selection (list(tuples)): Gives the selected pixels as a list of tuples
+    """
+    threshold = 15
+    im = read_image(original=True)
+    pixels = im.getdata()
+
+    mask = []
+    for pixel in pixels:
+        # get the minimum distance between the current pixel and the selections
+        minimum_distance = threshold + 1 # initialize to be bigger then threshold
+        for selected_pixel in selection:
+            distance = color_distance(selected_pixel, pixel)
+            if distance < minimum_distance:
+                minimum_distance = distance
+        mask.append(minimum_distance <= threshold)
+
+    # we use pickle to store the image mask
+    with open(PATH_TO_MASK, "wb") as file:
+        pickle.dump(mask, file)
+
+    # update car_selection.jpg
+    im_selection = Image.open(PATH_TO_ORIGINAL)
+    im_selection_pixels = im_selection.getdata()
+    new_pixels = []
+    for old_selection_pixel, is_selected in zip(im_selection_pixels, mask):
+        if is_selected:
+            new_pixels.append(
+                (
+                    int((old_selection_pixel[0] * 0.2 + 255 * 0.8)),
+                    old_selection_pixel[1],
+                    old_selection_pixel[2]
+                )
+            )
+        else:
+            new_pixels.append(old_selection_pixel)
+    im_selection.putdata(new_pixels)
+    im_selection.save(PATH_TO_SELECTION)
+
+def edit_paint(chosen_color):
+    """
+    1. get the current paint color (approximation)
+    """
+    # get the most
+    with open(PATH_TO_MASK, "rb") as file:
+        mask = pickle.load(file)
+
+    im = read_image(PATH_TO_ORIGINAL)
+
+    pixels = im.getdata()
+
+    count = 0
+    color_sums = [0, 0, 0]
+    for is_paint, pixel in zip(mask, pixels):
+        if is_paint and count % 10 == 0: # only look at one in ten pixels, for more efficient computation
+            color_sums[0] += pixel[0]
+            color_sums[1] += pixel[1]
+            color_sums[2] += pixel[2]
+            count += 1
+
+    average_color = [ x // count for x in color_sums]
+    new_pixels = []
+    for is_paint, pixel in zip(mask, pixels):
+        if is_paint:
+            # Calculate the color difference vector
+            diff_vector = [pixel[i] - average_color[i] for i in range(3)]
+            # Apply the difference to the chosen color
+            new_pixel = tuple(min(max(chosen_color[i] + diff_vector[i], 0), 255) for i in range(3))
+            new_pixels.append(new_pixel)
+        else:
+            new_pixels.append(pixel)
+
+
+    im.putdata(new_pixels)
+    im.save(PATH_TO_EDITED)
+
+image_segmentation([(199, 219, 249), (34, 140, 227), (91, 106, 133)])
+edit_paint((227, 10, 10))
