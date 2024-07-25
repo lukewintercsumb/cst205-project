@@ -17,7 +17,17 @@ PATH_TO_ORIGINAL = "static/images/car.png"
 PATH_TO_MASK = "static/mask/mask.pkl"
 
 def read_image(original=False):
-    return Image.open(PATH_TO_EDITED if not original else PATH_TO_ORIGINAL)
+    # return Image.open(PATH_TO_EDITED if not original else PATH_TO_ORIGINAL)
+    if not original:
+        try:
+            return Image.open(PATH_TO_EDITED)
+        except FileNotFoundError:
+            print("Edited image not found. Creating a new edited image from the original.")
+            original_image = Image.open(PATH_TO_ORIGINAL)
+            original_image.save(PATH_TO_EDITED)
+            return original_image
+    else:
+        return Image.open(PATH_TO_ORIGINAL)
 
 def revert_edited_image():
     """
@@ -138,9 +148,17 @@ def image_segmentation(selection):
                 minimum_distance = distance
         mask.append(minimum_distance <= threshold)
 
+
+
+    os.makedirs(os.path.dirname(PATH_TO_MASK), exist_ok=True)
+
+
+
     # we use pickle to store the image mask
     with open(PATH_TO_MASK, "wb") as file:
         pickle.dump(mask, file)
+
+    print(f"Mask created with {len(mask)} elements.")
 
     # update car_selection.jpg
     im_selection = Image.open(PATH_TO_ORIGINAL)
@@ -165,8 +183,21 @@ def edit_paint(chosen_color):
     1. get the current paint color (approximation)
     """
     # get the most
-    with open(PATH_TO_MASK, "rb") as file:
-        mask = pickle.load(file)
+    # with open(PATH_TO_MASK, "rb") as file:
+    #     mask = pickle.load(file)
+
+    mask = None
+    try:
+        with open(PATH_TO_MASK, "rb") as file:
+            mask = pickle.load(file)
+    except EOFError:
+        print("EOFError: The mask file is empty or corrupted.")
+        return
+    except FileNotFoundError:
+        print("FileNotFoundError: The mask file does not exist.")
+        return
+
+    print("Mask loaded successfully.")
 
     im = read_image(PATH_TO_ORIGINAL)
 
@@ -180,6 +211,10 @@ def edit_paint(chosen_color):
             color_sums[1] += pixel[1]
             color_sums[2] += pixel[2]
             count += 1
+
+    if count == 0:
+        print("No pixels were selected for painting.")
+        return
 
     average_color = [ x // count for x in color_sums]
     new_pixels = []
@@ -197,5 +232,5 @@ def edit_paint(chosen_color):
     im.putdata(new_pixels)
     im.save(PATH_TO_EDITED)
 
-image_segmentation([(199, 219, 249), (34, 140, 227), (91, 106, 133)])
-edit_paint((227, 10, 10))
+# image_segmentation([(199, 219, 249), (34, 140, 227), (91, 106, 133)])
+# edit_paint((227, 10, 10))
