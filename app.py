@@ -1,5 +1,13 @@
+"""
+course: CST205
+title: Paint editor
+abstract: This application allows users to upload (one of the preselected options) an image of a car.
+          The can use clever algorithms to select part of the paint, and then application will automatically make a selection of the paint.
+          The user can then change the color of the paint and also apply filters and even choose the intensity of the filter
+
+"""
+
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from werkzeug.utils import secure_filename
 
 # for the flask form
 from flask_wtf import FlaskForm
