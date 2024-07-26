@@ -7,6 +7,7 @@ from PIL import Image
 import tensorflow as tf
 import numpy as np
 import pickle
+import os
 from colormath.color_objects import sRGBColor, LabColor
 from colormath.color_conversions import convert_color
 from colormath.color_diff import delta_e_cie2000

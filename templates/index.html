@@ -37,28 +37,25 @@
             margin-top: 20px;
         }
     </style>
-    <script>
-        function selectCarImage(imageSrc) {
-            window.location.href = `/intermediate?car_image=${encodeURIComponent(imageSrc)}`;
-        }
-    </script>
 </head>
 <body>
     <h1>Select Your Car Image</h1>
     <p>Click on the car image you want to select for painting or upload your own image.</p>
+
+    <div class="upload-form">
+        <form action="/" method="post" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            {{ form.file.label }} {{ form.file }}
+            {{ form.submit }}
+        </form>
+    </div>
+
     <div class="car-images">
         {% for image in car_images %}
-            <div class="car-image" onclick="selectCarImage('{{ url_for('static', filename='images/' + image) }}')">
-                <img src="{{ url_for('static', filename='images/' + image) }}" alt="Car Image">
+            <div class="car-image">
+                <img src="{{ url_for('static', filename='images/' ~ image) }}" alt="Car Image">
             </div>
         {% endfor %}
     </div>
-    <div class="upload-form">
-        <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="file">
-            <input type="submit" value="Upload Image">
-        </form>
-    </div>
 </body>
 </html>
-

@@ -45,6 +45,7 @@
 
                 const pixel = ctx.getImageData(x, y, 1, 1).data;
                 const color = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`;
+                console.log(color);
 
                 fetch('/add_color', {
                     method: 'POST',
@@ -52,7 +53,8 @@
                     body: `color=${encodeURIComponent(color)}`
                 })
                 .then(response => response.json())
-                .then(colors => updateSelectedColors(colors));
+                .then(colors => updateSelectedColors(colors))
+                .catch(error => console.error('Error:', error));
             });
 
             function updateSelectedColors(colors) {
@@ -98,18 +100,21 @@
     <h1>Select the paint by clicking on pixels</h1>
     <div class="container">
         <div class="image-wrapper">
-            <img id="car-image" src="{{ car_image }}" alt="Car" width="400">
+            <img id="car-image" src="{{ car_image_url }}" alt="Car" width="400">
             <p>Original Image</p>
         </div>
         <div class="image-wrapper">
-            <img id="edited-car-image" src="{{ car_image }}" alt="Edited Car" width="400">
-            <p>Edited Image</p>
+            <img id="edited-car-image" src="/static/images/car_selection.png" alt="Paint Selection" width="400">
+            <p>Paint selection</p>
         </div>
     </div>
     <h2>Selected Colors:</h2>
     <ul id="selected-colors"></ul>
+    <form action="{{ url_for('image_segmentation_route') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <button type="submit">Apply Selection</button>
+    </form>
     <button onclick="window.location.href='/edit?car_image={{ car_image }}'">Continue</button>
     <!-- <button onclick="window.location.href='/continue'">Continue</button> -->
 </body>
 </html>
-
