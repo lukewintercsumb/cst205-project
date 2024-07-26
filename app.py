@@ -10,7 +10,7 @@ from wtforms.validators import DataRequired
 import shutil
 import os
 import re
-from utils import apply_filter, edit_paint, image_segmentation
+from utils import apply_filter, edit_paint, image_segmentation, revert_edited_image
 from PIL import Image
 
 app = Flask(__name__)
@@ -112,33 +112,32 @@ def image_segmentation_route():
 
 @app.route('/edit', methods=['GET', 'POST'])
 def edit():
-    car_image = request.args.get('car_image')
+    car_image = request.args.get('car_image', url_for('static', filename='images/car_edited.png'))
+    print(f"Edit route called with car_image: {car_image}")
     if request.method == 'POST':
         color = request.form.get('color')
         filter_name = request.form.get('filter')
-        intensity = float(request.form.get('intensity', 1))
+        intensity = request.form.get('intensity', 1)
+        print(f"Received POST request with color: {color}, filter: {filter_name}, intensity: {intensity}")
 
         if color:
             chosen_color = tuple(int(color[i:i+2], 16) for i in (1, 3, 5))
             print(f"Applying color: {chosen_color}")
             edit_paint(chosen_color)
-        
+
         if filter_name:
             print(f"Applying filter: {filter_name} with intensity {intensity}")
-            apply_filter(filter_name, intensity)
-
-        # saving the changes to the edited image
-        # timestamp = int(time.time())
+            apply_filter(filter_name, float(intensity))
+        
         return redirect(url_for('edit', car_image=car_image))
     return render_template('editor.html', car_image=car_image)
 
-
+@app.route('/reset', methods=['POST'])
+def reset():
+    revert_edited_image()
+    return redirect(url_for('edit'))
+        
 @app.route('/continue', methods=['GET'])
 def continue_edit():
     car_image = request.args.get('car_image')
     return redirect(url_for('edit', car_image=car_image))
-
-
-
-
-
