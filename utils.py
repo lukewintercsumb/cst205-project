@@ -181,12 +181,9 @@ def image_segmentation(selection):
 
 def edit_paint(chosen_color):
     """
-    1. get the current paint color (approximation)
+    1. get the current paint color (approximation as average of selections)
+    2. 
     """
-    # get the most
-    # with open(PATH_TO_MASK, "rb") as file:
-    #     mask = pickle.load(file)
-
     mask = None
     try:
         with open(PATH_TO_MASK, "rb") as file:

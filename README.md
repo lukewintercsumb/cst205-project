@@ -8,6 +8,13 @@
 
 ### How to run the program:
 
+- Pull the project
+- Go to your terminal and create an environment
+- Install all the necessary libraries (See import statements)
+- Navigate to the projects root folder and run the command "flask --app app --debug run"
+- Copy the URL and open it in your web browser
+- Enjoy!
+
 ### Github:
 
 https://github.com/lukewintercsumb/cst205-project
