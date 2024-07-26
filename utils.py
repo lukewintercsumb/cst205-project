@@ -1,8 +1,14 @@
 """
-This module contains a range of image manipulation functions.
-Those include image segmentation, 
-Every manipulation gets applied to car_edited.jpg and and saved under car_edited.jpg as well
+course: CST205
+title: Paint editor
+abstract: This module contains a range of image manipulation functions.
+          Those include image segmentation, 
+          Every manipulation gets applied to car_edited.jpg and and saved under car_edited.jpg as well
+authors: Elina Adibi, William Hurley, Luke Winter, Samuel Scott
+date: 07-26-24
+note: All the CSRF had to be added to make sure that the form work. We are not sure why that is required, but potentially it is a mac issue.
 """
+
 from PIL import Image
 import tensorflow as tf
 import numpy as np
@@ -182,7 +188,8 @@ def image_segmentation(selection):
 def edit_paint(chosen_color):
     """
     1. get the current paint color (approximation as average of selections)
-    2. 
+    2. for each selected pixel, get the vector from average paint color to that pixel.
+    3. replace each selected pixel with the seleceted color, plus the priviously acquired color vector.
     """
     mask = None
     try:

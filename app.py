@@ -27,7 +27,7 @@ app = Flask(__name__)
 csrf = CSRFProtect(app)
 
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'images')
-app.config['SECRET_KEY'] = 'your_secret_key'  # chatGPT told me to add that because my application didn't let me use the Form without it
+app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 csrf.init_app(app)

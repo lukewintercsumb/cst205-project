@@ -31,7 +31,7 @@
 
         <form class="controls" method="POST" enctype="multipart/form-data" action="/edit?car_image={{ car_image }}">
 
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  <!-- chatGPT told me to add that because I was gettign cstf token error --> 
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  
             <div class="mb-3">
                 <label for="colorPicker" class="form-label">Pick a Color</label>
                 <input type="color" class="form-control" id="colorPicker" name="color">
